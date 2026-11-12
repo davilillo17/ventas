@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.iesvdm.modelo.Cliente;
 import org.iesvdm.servicios.ClienteService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -19,8 +18,11 @@ import org.springframework.web.servlet.view.RedirectView;
 @Controller 
 public class ClienteController {
 
-    @Autowired 
-    private ClienteService clienteService;
+    private final ClienteService clienteService;
+
+    public ClienteController(ClienteService clienteService) {
+        this.clienteService = clienteService;
+    }
 
     @GetMapping("/clientes")
     public String listar(Model model) {
@@ -34,6 +36,7 @@ public class ClienteController {
         return clienteService.find(id)
                 .map(cliente -> {
                     model.addAttribute("cliente", cliente);
+                    model.addAttribute("pedidos", clienteService.listPedidosByCliente(id));
                     return "detalle-cliente";
                 })
                 .orElse("redirect:/clientes");

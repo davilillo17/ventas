@@ -48,6 +48,18 @@ public class PedidoDAOImpl implements PedidoDAO {
     }
 
     @Override
+    public List<PedidoDetalle> findByComercialId(int comercialId) {
+        return jdbcTemplate.query(sqlDetalle() + " WHERE p.id_comercial = ? ORDER BY p.id",
+                (rs, rowNum) -> mapDetalle(rs), comercialId);
+    }
+
+    @Override
+    public List<PedidoDetalle> findByClienteId(int clienteId) {
+        return jdbcTemplate.query(sqlDetalle() + " WHERE p.id_cliente = ? ORDER BY p.id",
+                (rs, rowNum) -> mapDetalle(rs), clienteId);
+    }
+
+    @Override
     public Optional<Pedido> find(int id) {
         List<Pedido> pedidos = jdbcTemplate.query(
                 "SELECT id, total, fecha, id_cliente, id_comercial FROM pedido WHERE id = ?",
