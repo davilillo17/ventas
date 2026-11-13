@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/layout :: head('Detalle del comercial')}"></head>
 <body>
     <nav th:replace="~{fragments/layout :: navbar}"></nav>
-    <main class="container py-4" style="max-width: 720px">
+    <main class="container py-4">
         <h1 class="h2 mb-4">Detalle del comercial</h1>
         <dl class="row">
             <dt class="col-sm-4">ID</dt><dd class="col-sm-8" th:text="${comercial.id}">0</dd>
@@ -12,12 +12,20 @@
             <dt class="col-sm-4">Apellido 2</dt><dd class="col-sm-8" th:text="${comercial.apellido2 ?: '-'}">apellido2</dd>
             <dt class="col-sm-4">Comisión</dt><dd class="col-sm-8" th:text="${comercial.comisión ?: '-'}">comisión</dd>
         </dl>
+        <section class="mb-4" aria-labelledby="estadisticas-heading">
+            <h2 id="estadisticas-heading" class="h4 mt-4">Estadísticas de pedidos</h2>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Total vendido</dt><dd class="col-sm-3" th:text="${#numbers.formatDecimal(estadisticas.total, 1, 2)}">0.00</dd>
+                <dt class="col-sm-3">Media por pedido</dt><dd class="col-sm-3" th:text="${#numbers.formatDecimal(estadisticas.media, 1, 2)}">0.00</dd>
+            </dl>
+        </section>
         <h2 class="h4 mt-4">Pedidos del comercial</h2>
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead><tr><th>ID</th><th>Total</th><th>Fecha</th><th>Cliente</th></tr></thead>
                 <tbody>
-                    <tr th:each="pedido : ${pedidos}">
+                    <tr th:each="pedido : ${pedidos}"
+                        th:classappend="${pedido.total == estadisticas.maximo and pedido.total == estadisticas.minimo} ? 'table-success table-warning' : (${pedido.total == estadisticas.maximo} ? 'table-success' : (${pedido.total == estadisticas.minimo} ? 'table-warning' : ''))">
                         <td th:text="${pedido.id}">0</td>
                         <td th:text="${pedido.total}">0.00</td>
                         <td th:text="${pedido.fecha ?: '-'}">fecha</td>
@@ -27,7 +35,30 @@
                 </tbody>
             </table>
         </div>
+        <p class="small mb-4">
+            <span class="badge text-bg-success">Verde</span> Pedido de importe máximo.
+            <span class="badge text-bg-warning">Amarillo</span> Pedido de importe mínimo.
+        </p>
+        <h2 class="h4 mt-4">Clientes por importe total de pedidos</h2>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead><tr><th>ID</th><th>Cliente</th><th>Total de sus pedidos</th></tr></thead>
+                <tbody>
+                    <tr th:each="cliente : ${clientes}">
+                        <td th:text="${cliente.id}">0</td>
+                        <td><a th:href="@{/clientes/{id}(id=${cliente.id})}" th:text="${cliente.nombre}">cliente</a></td>
+                        <td th:text="${#numbers.formatDecimal(cliente.totalPedidos, 1, 2)}">0.00</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(clientes)}"><td colspan="3" class="text-muted">Este comercial todavía no tiene clientes con pedidos.</td></tr>
+                </tbody>
+            </table>
+        </div>
         <a class="btn btn-outline-secondary" th:href="@{/comerciales}">Volver</a>
     </main>
+    <style>
+        .table-success.table-warning > * {
+            background: linear-gradient(90deg, var(--bs-success-bg-subtle) 50%, var(--bs-warning-bg-subtle) 50%) !important;
+        }
+    </style>
 </body>
 </html>

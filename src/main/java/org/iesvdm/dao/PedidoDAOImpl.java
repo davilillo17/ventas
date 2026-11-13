@@ -6,6 +6,7 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 
+import org.iesvdm.dto.ClienteTotalPedidosDTO;
 import org.iesvdm.modelo.Pedido;
 import org.iesvdm.modelo.PedidoDetalle;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -51,6 +52,25 @@ public class PedidoDAOImpl implements PedidoDAO {
     public List<PedidoDetalle> findByComercialId(int comercialId) {
         return jdbcTemplate.query(sqlDetalle() + " WHERE p.id_comercial = ? ORDER BY p.id",
                 (rs, rowNum) -> mapDetalle(rs), comercialId);
+    }
+
+    @Override
+    public List<ClienteTotalPedidosDTO> findClientesByComercialOrdenadosPorTotal(int comercialId) {
+        return jdbcTemplate.query("""
+                SELECT c.id, CONCAT_WS(' ', c.nombre, c.apellido1, c.apellido2) AS cliente_nombre,
+                       SUM(p.total) AS total_pedidos
+                FROM cliente c
+                JOIN pedido p ON p.id_cliente = c.id
+                WHERE EXISTS (
+                    SELECT 1 FROM pedido pc
+                    WHERE pc.id_cliente = c.id AND pc.id_comercial = ?
+                )
+                GROUP BY c.id, c.nombre, c.apellido1, c.apellido2
+                ORDER BY total_pedidos DESC, c.id
+                """,
+                (rs, rowNum) -> new ClienteTotalPedidosDTO(
+                        rs.getInt("id"), rs.getString("cliente_nombre"), rs.getDouble("total_pedidos")),
+                comercialId);
     }
 
     @Override
